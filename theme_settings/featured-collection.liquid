@@ -1,0 +1,147 @@
+<!-- Deals with collection.liquid and product-card-grid.liquid -->
+<div class="page-width">
+	<!-- Generates the id for the title by using the id within the schema -->
+	{% if section.settings.title != blank %}
+	<div class="section-header text-center">
+		<h2>{{ section.settings.title | escape }}</h2>
+	</div>
+	{% endif %}
+
+	<!-- Assigning variable collection to have the selected collection the user wants from the “Customize theme” setting -->
+	{%- assign collection = collections[section.settings.collection] -%}
+	<!-- Allowing user to select how many products per row from the “Customize theme” setting. Then assigning class depending on the width and assigning the size -->
+	{% case section.settings.grid %}
+		{% when '2' %}
+			{%- assign grid_item_width = 'medium-up--one-half' -%}
+			{%- assign image_size = '540x600' -%}
+		{% when '3' %}
+			{%- assign grid_item_width = 'small--one-half medium-up--one-third' -%}
+			{%- assign image_size = '345x550' -%}
+		{% when '4' %}
+			{%- assign grid_item_width = 'small--one-half medium-up--one-quarter' -%}
+			{%- assign image_size = '250x' -%}
+		{% when '5' %}
+			{%- assign grid_item_width = 'small--one-half medium-up--one-fifth' -%}
+			{%- assign image_size = '195x' -%}
+	{% endcase %}
+
+	<!-- Assigning product_limit, checking to see the maximum number of products by multiplying the number of rows and the number of products within each row -->
+	{%- assign product_limit = section.settings.grid | times: section.settings.rows -%}
+	<!-- Loops through the products within that specific collection that’s selected and displays whatever is within the snippet called 'product-card-grid', and displays the correct image size -->
+	<div class="grid grid--uniform grid--view-items">
+		{% for product in collection.products limit: product_limit %}
+			<div class="grid__item {{ grid_item_width }}">
+				{% include 'product-card-grid', grid_image_width: image_size %}
+			</div>
+		{% endfor %}
+	</div>
+	<!-- Shows the view all button that is predefined by Shopify if the user checkboxes it from the customize theme setting -->
+	{% if section.settings.show_view_all %}
+		<hr class="hr--invisible"></hr>
+		<div class="text-center">
+			<a href="{{ collection.url }}" class="btn">
+				{{ 'collections.general.view_all' | t }}
+			</a>
+		</div>
+	{% endif %}
+</div>
+
+{% schema %}
+	{
+			"name": "Featured collection",
+			"class": "index-section",
+			"settings": [
+			{
+					"type": "text",
+					"id": "title",
+					"label": "Heading",
+					"default": "Featured collection"
+				},
+				{
+					"id": "collection",
+					"type": "collection",
+					"label": "Collection"
+				},
+				{
+					"type": "select",
+					"id": "grid",
+					"label": "Products per row",
+					"default": "3",
+					"options": [
+						{
+							"value": "2",
+							"label": "2"
+						},
+						{
+							"value": "3",
+							"label": "3"
+						},
+						{
+							"value": "4",
+							"label": "4"
+						},
+						{
+							"value": "5",
+							"label": "5"
+						}
+					]
+				},
+				{
+					"type": "select",
+					"id": "rows",
+					"label": "Rows",
+					"default": "2",
+					"options": [
+						{
+							"value": "1",
+							"label": "1"
+						},
+						{
+							"value": "2",
+							"label": "2"
+						},
+						{
+							"value": "3",
+							"label": "3"
+						},
+						{
+							"value": "4",
+							"label": "4"
+						},
+						{
+							"value": "5",
+							"label": "5"
+						}
+					]
+				},
+				{
+				"type": "checkbox",
+				"id": "show_view_all",
+				"label": "Show 'View all' button",
+				"default": false
+				}
+			],
+				"presets": [
+			{
+				"name": "Featured collection",
+				"category": "Collection"
+			}
+		]
+	}
+{% endschema %}
+<!-- product-card-grid.liquid -->
+
+{% unless grid_image_width %}
+{%- assign grid_image_width = '600x600' -%}
+{% endunless %}
+
+<div class="grid-view-item{% unless product.available %} product-price--sold-out grid-view-item--sold-out{% endunless %}">
+		<a class="grid-view-item__link" href="{{ product.url | within: collection }}">
+		<img class="grid-view-item__image" src="{{ product.featured_image.src | img_url: grid_image_width }}" alt="{{ product.featured_image.alt }}">
+		<div class="h4 grid-view-item__title">{{ product.title }}</div>
+		<div class="grid-view-item__meta">
+			{% comment %} {% include 'product-price' %} {% endcomment %}
+			{{ product.price | money }}
+		</div>
+	</a>
+</div>
